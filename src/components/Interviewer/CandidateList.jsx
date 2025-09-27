@@ -3,22 +3,20 @@ import React from 'react';
 /**
  * Displays a list of candidates in a table.
  * @param {object} props
- * @param {Array<object>} props.candidates - The array of candidate objects from the store.
+ * @param {Array<object>} props.candidates - A pre-filtered and pre-sorted array of candidate objects.
  * @param {function(object): void} props.onSelectCandidate - Callback to set the selected candidate for the detail view.
  */
 const CandidateList = ({ candidates, onSelectCandidate }) => {
-  // If there are no completed interviews yet, show a helpful message.
+  // If the processed list is empty, show a message. This could be because there are
+  // no candidates, or because the search term didn't match any.
   if (!candidates || candidates.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '40px' }}>
-        <h2>No interviews completed yet.</h2>
-        <p>As candidates complete their interviews, their results will appear here.</p>
+        <h2>No matching candidates found.</h2>
+        <p>Try adjusting your search or sort criteria, or wait for new interviews to be completed.</p>
       </div>
     );
   }
-
-  // Create a sorted copy of the candidates array, from highest score to lowest.
-  const sortedCandidates = [...candidates].sort((a, b) => b.score - a.score);
 
   return (
     <div className="candidate-list">
@@ -33,7 +31,7 @@ const CandidateList = ({ candidates, onSelectCandidate }) => {
           </tr>
         </thead>
         <tbody>
-          {sortedCandidates.map((candidate) => (
+          {candidates.map((candidate) => ( // Directly map over the received 'candidates' prop
             <tr key={candidate.candidateId}>
               <td>
                 <div>{candidate.name}</div>

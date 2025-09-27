@@ -2,51 +2,63 @@ import React, { useState, useEffect } from 'react';
 import useInterviewStore from '../store/interviewStore';
 import ResumeUpload from '../components/Interviewee/ResumeUpload';
 import ChatWindow from '../components/Interviewee/ChatWindow';
-import MissingInfoModal from '../components/Interviewee/MissingInfoModal'; // Import our new modal
+import MissingInfoModal from '../components/Interviewee/MissingInfoModal';
+import WelcomeBackModal from '../components/Interviewee/WelcomeBackModal'; // Import the new modal
 
 const IntervieweePage = () => {
   const { activeInterview, startNewInterview, updateCandidateInfo, startInterviewProcess, resetActiveInterview } = useInterviewStore();
   
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [parsedInfo, setParsedInfo] = useState(null); // To hold resume data temporarily
+  const [parsedInfo, setParsedInfo] = useState(null);
+  const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false); // State for the new modal
 
   useEffect(() => {
-    // Session restoration logic is simplified.
-    // The "Welcome Back" modal is a later step if we need it. For now, let's focus on the new flow.
-    if (!activeInterview.candidateId || activeInterview.status === 'completed') {
+    // Check for an in-progress interview on component mount.
+    if (activeInterview.status === 'in-progress') {
+      setShowWelcomeBackModal(true);
+    } else if (!activeInterview.candidateId || activeInterview.status === 'completed') {
+      // If no active interview, or it's completed, start a fresh one.
       startNewInterview();
     }
-  }, [activeInterview.status, activeInterview.candidateId, startNewInterview]);
+  }, []); // Run only once on mount
 
-  /**
-   * This function is now the main controller after resume upload.
-   */
   const handleResumeSuccess = (info) => {
-    // Check if any required field is missing.
     if (!info.name || !info.email || !info.phone) {
-      setParsedInfo(info); // Store the partial info
-      setShowInfoModal(true); // Trigger the popup
+      setParsedInfo(info);
+      setShowInfoModal(true);
     } else {
-      // If all info is present, update the store and start the interview directly.
       updateCandidateInfo(info);
       startInterviewProcess();
     }
   };
 
-  /**
-   * This function is called when the MissingInfoModal form is submitted.
-   */
   const handleInfoSubmit = (completeInfo) => {
-    updateCandidateInfo(completeInfo); // Update the store with the complete info
-    startInterviewProcess(); // Start the interview process
-    setShowInfoModal(false); // Close the modal
+    updateCandidateInfo(completeInfo);
+    startInterviewProcess();
+    setShowInfoModal(false);
   };
 
-  // --- Component Rendering Logic ---
+  // --- Handlers for the WelcomeBackModal ---
+  const handleContinue = () => {
+    setShowWelcomeBackModal(false); // Just close the modal and continue
+  };
+
+  const handleStartOver = () => {
+    resetActiveInterview(); // Reset the interview state
+    setShowWelcomeBackModal(false); // Close the modal
+  };
 
   return (
     <div>
-      {/* Conditionally render the new Missing Info modal */}
+      {/* Render the Welcome Back modal if an interview is in progress */}
+      {showWelcomeBackModal && (
+        <WelcomeBackModal
+          onContinue={handleContinue}
+          onStartOver={handleStartOver}
+        />
+      )}
+
+      {/* Render the Missing Info modal if needed */}
       {showInfoModal && (
         <MissingInfoModal
           initialInfo={parsedInfo}
@@ -55,7 +67,7 @@ const IntervieweePage = () => {
         />
       )}
 
-      {/* Show Resume Upload only if the process hasn't started */}
+      {/* Show Resume Upload only if the process is pending */}
       {activeInterview.status === 'pending' && (
         <ResumeUpload onUploadSuccess={handleResumeSuccess} />
       )}
@@ -65,6 +77,7 @@ const IntervieweePage = () => {
         <ChatWindow />
       )}
       
+      {/* Show completion message */}
       {activeInterview.status === 'completed' && (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <h2>Interview Complete!</h2>
