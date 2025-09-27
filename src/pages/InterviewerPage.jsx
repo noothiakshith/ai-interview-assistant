@@ -1,42 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import useInterviewStore from '../store/interviewStore';
 import CandidateList from '../components/Interviewer/CandidateList';
 import CandidateDetails from '../components/Interviewer/CandidateDetails';
 
 /**
  * The main page for the interviewer dashboard.
- * It fetches the list of candidates from the Zustand store and manages
- * the logic for displaying either the list of all candidates or the
- * detailed view of a single candidate.
+ * It now includes controls for searching and sorting the candidate list.
  */
 const InterviewerPage = () => {
-  // Get the list of all completed candidates from our global store.
   const candidates = useInterviewStore((state) => state.candidates);
-  
-  // Use local state to track which candidate is currently being viewed.
-  // If `null`, we show the list. If it's a candidate object, we show the details.
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
-  // If a candidate has been selected, render the detail view.
+  // New state for handling search and sort functionality.
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('score-desc'); // Default sort order
+
+  // useMemo will re-calculate the displayed candidates only when the source list,
+  // search term, or sort order changes, which is great for performance.
+  const processedCandidates = useMemo(() => {
+    let filtered = [...candidates];
+
+    // Apply search filter (case-insensitive)
+    if (searchTerm) {
+      filtered = filtered.filter(candidate =>
+        candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    const [key, direction] = sortOrder.split('-');
+    filtered.sort((a, b) => {
+      const valA = key === 'name' ? a.name.toLowerCase() : a.score;
+      const valB = key === 'name' ? b.name.toLowerCase() : b.score;
+
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [candidates, searchTerm, sortOrder]);
+
+  // If a candidate is selected, show their details.
   if (selectedCandidate) {
     return (
       <CandidateDetails 
         candidate={selectedCandidate} 
-        // Pass a function to the 'onBack' prop that clears the selection,
-        // which will cause this component to re-render and show the list again.
         onBack={() => setSelectedCandidate(null)} 
       />
     );
   }
 
-  // By default, render the list of all candidates.
+  // The main dashboard view with search and sort controls.
   return (
-    <CandidateList 
-      candidates={candidates} 
-      // Pass the setSelectedCandidate function so the list component can
-      // tell this page which candidate the user has clicked on.
-      onSelectCandidate={setSelectedCandidate} 
-    />
+    <div className="interviewer-dashboard">
+      <div className="controls" style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        padding: '20px',
+        borderBottom: '1px solid #eee',
+        alignItems: 'center'
+      }}>
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '10px', fontSize: '1rem', width: '350px', border: '1px solid #ccc', borderRadius: '4px' }}
+        />
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          style={{ padding: '10px', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px' }}
+        >
+          <option value="score-desc">Sort by Score (High to Low)</option>
+          <option value="score-asc">Sort by Score (Low to High)</option>
+          <option value="name-asc">Sort by Name (A-Z)</option>
+          <option value="name-desc">Sort by Name (Z-A)</option>
+        </select>
+      </div>
+      <CandidateList
+        candidates={processedCandidates}
+        onSelectCandidate={setSelectedCandidate}
+      />
+    </div>
   );
 };
 
