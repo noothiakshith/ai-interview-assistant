@@ -1,0 +1,103 @@
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background-color: var(--surface-color);
+}
+
+.messages-container {
+  flex-grow: 1;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-message {
+  padding: 0.75rem 1.25rem;
+  border-radius: 1.25rem;
+  max-width: 75%;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.chat-message.ai {
+  background-color: #e5e7eb;
+  color: var(--text-primary);
+  align-self: flex-start;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.chat-message.user {
+  background-color: var(--primary-color);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.input-area {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  background-color: #f9fafb;
+}
+
+.input-area textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+  height: 90px;
+  resize: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-area textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.timer {
+  font-weight: 600;
+  color: var(--error-color);
+  margin-bottom: 0.75rem;
+  text-align: center;
+  font-size: 1.125rem;
+}
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1rem 1.25rem;
+}
+
+.typing-indicator span {
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  background-color: #9ca3af;
+  display: inline-block;
+  animation: typing 1s infinite;
+}
+
+.typing-indicator span:nth-of-type(1) { animation-delay: 0.1s; }
+.typing-indicator span:nth-of-type(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-of-type(3) { animation-delay: 0.3s; }
+
+@keyframes typing {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
